@@ -1,12 +1,24 @@
 import streamlit as st
 import streamlit.components.v1 as components
+import base64
+import os
 
 st.set_page_config(page_title="블록 스나이퍼", page_icon="🎯", layout="centered")
 
-st.title("🎯 블록 스나이퍼: 금발의 암살자")
-st.markdown("**[리얼 스나이퍼 조작법]**\n* 화면을 **꾹 누르면** 금발 요원이 일어나 줌(Zoom)을 켭니다.\n* 손가락을 **떼는 순간** 사격(탕!)하고 다시 벽 뒤로 **숨습니다.**\n* ⚠️ 적이 붉은 레이저로 조준하면 **반드시 손을 떼서 엄폐하세요!**")
+st.title("🎯 블록 스나이퍼: 특수 요원 SJI")
+st.markdown("**[리얼 스나이퍼 조작법]**\n* 화면을 **꾹 누르면** 요원이 줌(Zoom)을 켭니다.\n* 손가락을 **떼는 순간** 사격(탕!)하고 다시 벽 뒤로 **숨습니다.**\n* ⚠️ 적이 붉은 레이저로 조준하면 **반드시 손을 떼서 엄폐하세요!**")
 st.markdown("---")
 
+# 부장님이 올리신 이미지를 파이썬이 읽어서 웹용으로 변환하는 마법의 코드
+image_path = "sniper.jpg"
+img_base64 = ""
+
+if os.path.exists(image_path):
+    with open(image_path, "rb") as img_file:
+        encoded_string = base64.b64encode(img_file.read()).decode()
+        img_base64 = f"data:image/jpeg;base64,{encoded_string}"
+
+# 게임 엔진 코드 (HTML/JS)
 game_html = """
 <!DOCTYPE html>
 <html>
@@ -62,14 +74,18 @@ game_html = """
   const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
 
+  // ★ 부장님의 스나이퍼 이미지 로딩
+  const sniperImg = new Image();
+  sniperImg.src = "SNIPER_IMG_SRC";
+
   let score = 0; let hp = 3; let gameOver = false; let frameCount = 0;
   let recoilOffset = 0; let targets = []; let particles = []; let enemyBullets = [];
   let mouseX = canvas.width / 2; let mouseY = canvas.height / 2;
   
   let isHiding = true; 
-  let currentWallY = canvas.height * 0.6; // 벽의 높이
+  let currentWallY = canvas.height * 0.6; 
 
-  let highScores = JSON.parse(localStorage.getItem('7c_sniper_v2_ranking')) || [];
+  let highScores = JSON.parse(localStorage.getItem('7c_sniper_v3_ranking')) || [];
   let currentHighScore = highScores.length > 0 ? highScores[0].score : 0;
   document.getElementById("score").innerText = `👑최고: ${currentHighScore} | 🪙 0점`;
 
@@ -78,69 +94,62 @@ game_html = """
       ctx.strokeStyle = "rgba(0,0,0,0.6)"; ctx.lineWidth = 1.5; ctx.strokeRect(x, y, w, h);
   }
 
-  // 👱‍♀️ 고화질 2D 금발 스나이퍼 그리기 (코드 수제작)
+  // ★ 요원 프로필 그리기 (커스텀 이미지 적용)
   function drawFemaleSniper() {
-      ctx.save();
-      ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 10;
+      // 이미지가 정상적으로 불러와졌다면 (부장님의 이미지 출력)
+      if (sniperImg.complete && sniperImg.src && sniperImg.src.length > 50) {
+          let frameW = 160;
+          let frameH = 220;
+          let frameX = canvas.width - frameW - 15;
+          let frameY = canvas.height - frameH - 15;
 
-      // 몸통 (전술 요원복)
-      ctx.fillStyle = "#1e272e";
-      ctx.beginPath(); ctx.moveTo(-10, canvas.height); ctx.lineTo(30, canvas.height - 180); 
-      ctx.lineTo(130, canvas.height - 160); ctx.lineTo(160, canvas.height); ctx.fill();
+          ctx.save();
+          // 이미지 박스 금장 테두리 및 그림자 효과 (블랙 배경을 살림)
+          ctx.shadowColor = "rgba(0,0,0,0.8)";
+          ctx.shadowBlur = 15;
+          ctx.strokeStyle = "#FFD700";
+          ctx.lineWidth = 3;
+          ctx.strokeRect(frameX, frameY, frameW, frameH);
+          ctx.shadowBlur = 0;
 
-      // 얼굴 (서양인 피부톤)
-      ctx.fillStyle = "#ffeaa7"; 
-      ctx.beginPath(); ctx.arc(100, canvas.height - 210, 35, 0, Math.PI*2); ctx.fill();
+          // 진짜 이미지 그리기
+          ctx.drawImage(sniperImg, frameX, frameY, frameW, frameH);
 
-      // 코와 턱선 (측면 프로필)
-      ctx.beginPath(); ctx.moveTo(120, canvas.height - 230); ctx.lineTo(145, canvas.height - 210); 
-      ctx.lineTo(130, canvas.height - 195); ctx.lineTo(135, canvas.height - 185); 
-      ctx.lineTo(100, canvas.height - 175); ctx.fill();
-
-      // 파란 눈
-      ctx.fillStyle = "#0984e3";
-      ctx.beginPath(); ctx.ellipse(125, canvas.height - 220, 6, 3, Math.PI/8, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(126, canvas.height - 221, 1.5, 0, Math.PI*2); ctx.fill();
-
-      // 빨간 입술
-      ctx.fillStyle = "#d63031";
-      ctx.beginPath(); ctx.ellipse(135, canvas.height - 195, 5, 2.5, Math.PI/6, 0, Math.PI*2); ctx.fill();
-
-      // 금발 머리카락 (찰랑이는 포니테일)
-      ctx.fillStyle = "#fdcb6e";
-      ctx.beginPath(); ctx.moveTo(70, canvas.height - 180); ctx.quadraticCurveTo(50, canvas.height - 250, 110, canvas.height - 250);
-      ctx.quadraticCurveTo(130, canvas.height - 245, 110, canvas.height - 230); ctx.quadraticCurveTo(80, canvas.height - 220, 80, canvas.height - 180); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(70, canvas.height - 230); ctx.quadraticCurveTo(20, canvas.height - 220, 30, canvas.height - 150);
-      ctx.quadraticCurveTo(50, canvas.height - 180, 80, canvas.height - 200); ctx.fill();
-
-      // 대물 저격총
-      ctx.fillStyle = "#2d3436"; ctx.shadowBlur = 5;
-      ctx.fillRect(120, canvas.height - 165, 150, 15); // 총열
-      ctx.fillRect(160, canvas.height - 180, 50, 12); // 조준경
-      
-      // 총 잡은 손
-      ctx.fillStyle = "#ffeaa7"; ctx.beginPath(); ctx.arc(140, canvas.height - 155, 12, 0, Math.PI*2); ctx.fill();
-
-      ctx.restore();
+          // 하단 이름표 바 (AGENT SJI)
+          ctx.fillStyle = "rgba(0,0,0,0.7)";
+          ctx.fillRect(frameX, frameY + frameH - 30, frameW, 30);
+          ctx.fillStyle = "#FFF";
+          ctx.font = "16px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText("AGENT SJI", frameX + frameW/2, frameY + frameH - 10);
+          ctx.restore();
+      } else {
+          // 혹시 이미지를 못 찾았을 때를 대비한 찰흙 비상용 스나이퍼
+          ctx.save();
+          ctx.fillStyle = "#1e272e";
+          ctx.beginPath(); ctx.moveTo(-10, canvas.height); ctx.lineTo(30, canvas.height - 180); 
+          ctx.lineTo(130, canvas.height - 160); ctx.lineTo(160, canvas.height); ctx.fill();
+          ctx.fillStyle = "#ffeaa7"; ctx.beginPath(); ctx.arc(100, canvas.height - 210, 35, 0, Math.PI*2); ctx.fill();
+          ctx.restore();
+      }
   }
 
-  // 👾 다양해진 마인크래프트 적군들
   function drawMinecraftEnemy(t) {
-      if(t.subType === 'zombie') { // 일반 좀비
+      if(t.subType === 'zombie') { 
           drawBlock(t.x, t.y, t.size, t.size, "#2ecc71"); 
           drawBlock(t.x + t.size*0.1, t.y + t.size, t.size*0.8, t.size*1.2, "#3498db");
-      } else if (t.subType === 'skeleton') { // 스켈레톤 (하얀색)
+      } else if (t.subType === 'skeleton') { 
           drawBlock(t.x, t.y, t.size, t.size, "#ecf0f1"); 
           drawBlock(t.x + t.size*0.1, t.y + t.size, t.size*0.8, t.size*1.2, "#bdc3c7");
-          drawBlock(t.x + t.size*0.2, t.y + t.size*0.3, t.size*0.6, t.size*0.2, "#111"); // 선글라스 모양 눈
-      } else if (t.subType === 'spider') { // 거미 (납작하고 검은색)
+          drawBlock(t.x + t.size*0.2, t.y + t.size*0.3, t.size*0.6, t.size*0.2, "#111"); 
+      } else if (t.subType === 'spider') { 
           drawBlock(t.x - t.size*0.5, t.y + t.size*0.5, t.size*2, t.size*0.8, "#2c3e50"); 
-          drawBlock(t.x + t.size*0.2, t.y + t.size*0.7, t.size*0.2, t.size*0.2, "#e74c3c"); // 빨간 눈
+          drawBlock(t.x + t.size*0.2, t.y + t.size*0.7, t.size*0.2, t.size*0.2, "#e74c3c"); 
           drawBlock(t.x + t.size*0.6, t.y + t.size*0.7, t.size*0.2, t.size*0.2, "#e74c3c"); 
-      } else if (t.subType === 'enderman') { // 엔더맨 (길쭉하고 보라색 눈)
+      } else if (t.subType === 'enderman') { 
           drawBlock(t.x, t.y - t.size*0.5, t.size*0.8, t.size*0.8, "#111"); 
-          drawBlock(t.x + t.size*0.1, t.y + t.size*0.3, t.size*0.6, t.size*2.5, "#111"); // 긴 몸
-          drawBlock(t.x + t.size*0.1, t.y - t.size*0.2, t.size*0.6, t.size*0.15, "#9b59b6"); // 보라색 눈
+          drawBlock(t.x + t.size*0.1, t.y + t.size*0.3, t.size*0.6, t.size*2.5, "#111"); 
+          drawBlock(t.x + t.size*0.1, t.y - t.size*0.2, t.size*0.6, t.size*0.15, "#9b59b6"); 
       }
   }
 
@@ -152,13 +161,12 @@ game_html = """
           
           let yPos = (sub === 'spider') ? canvas.height*0.6 : (Math.random() * (canvas.height*0.2) + canvas.height*0.4);
           let speedX = (Math.random() * 1.5 + 0.5) * (Math.random() > 0.5 ? 1 : -1);
-          if(sub === 'spider') speedX *= 1.8; // 거미는 빠름
+          if(sub === 'spider') speedX *= 1.8; 
           
           targets.push({
-              subType: sub,
-              x: speedX > 0 ? -60 : canvas.width + 60, 
+              subType: sub, x: speedX > 0 ? -60 : canvas.width + 60, 
               y: yPos, size: size, speedX: speedX,
-              attackTimer: Math.random() * 80 + 100 // 공격까지 남은 시간
+              attackTimer: Math.random() * 80 + 100 
           });
       }
   }
@@ -166,7 +174,7 @@ game_html = """
   function shoot() {
       if(gameOver) return;
       recoilOffset = 25; 
-      ctx.fillStyle = "rgba(255, 255, 0, 0.5)"; ctx.fillRect(0, 0, canvas.width, canvas.height); // 사격 섬광
+      ctx.fillStyle = "rgba(255, 255, 0, 0.5)"; ctx.fillRect(0, 0, canvas.width, canvas.height); 
 
       let hit = false;
       for (let i = targets.length - 1; i >= 0; i--) {
@@ -174,14 +182,12 @@ game_html = """
           let tHeight = t.size * 2.5; if(t.subType==='spider') tHeight = t.size; if(t.subType==='enderman') tHeight = t.size*3;
           
           if (mouseX > t.x - 20 && mouseX < t.x + t.size*2 + 20 && mouseY > t.y - 30 && mouseY < t.y + tHeight + 20) {
-              
-              if(mouseY < t.y + t.size + 10) { // 헤드샷 판정 후하게
+              if(mouseY < t.y + t.size + 10) { 
                   score += 2; createParticles(mouseX, mouseY, "#e74c3c"); 
               } else {
                   score += 1; createParticles(mouseX, mouseY, "#3498db"); 
               }
-              targets.splice(i, 1);
-              updateUI(); hit = true; break;
+              targets.splice(i, 1); updateUI(); hit = true; break;
           }
       }
       if(!hit) createParticles(mouseX, mouseY, "#95a5a6"); 
@@ -232,18 +238,14 @@ game_html = """
       frameCount++;
       if(Math.random() < 0.05) spawnTarget(); 
 
-      // 엄폐물 애니메이션
       let targetWallY = isHiding ? canvas.height * 0.55 : canvas.height;
       currentWallY += (targetWallY - currentWallY) * 0.25; 
 
       for (let i = targets.length - 1; i >= 0; i--) {
-          let t = targets[i];
-          t.x += t.speedX;
+          let t = targets[i]; t.x += t.speedX;
           
-          // 엔더맨 순간이동 로직
           if(t.subType === 'enderman' && frameCount % 60 === 0 && Math.random() < 0.5) {
-              t.x += (Math.random() > 0.5 ? 40 : -40); 
-              createParticles(t.x, t.y, "#9b59b6");
+              t.x += (Math.random() > 0.5 ? 40 : -40); createParticles(t.x, t.y, "#9b59b6");
           }
           
           if(t.x < -80 || t.x > canvas.width + 80) targets.splice(i, 1); 
@@ -257,15 +259,14 @@ game_html = """
       }
 
       for (let i = enemyBullets.length - 1; i >= 0; i--) {
-          let b = enemyBullets[i];
-          b.progress += 0.025; // 총알 날아오는 속도
+          let b = enemyBullets[i]; b.progress += 0.025; 
           if(b.progress >= 1) { 
               if(!isHiding) {
                   hp--; updateUI(); ctx.fillStyle = "rgba(255,0,0,0.7)"; ctx.fillRect(0,0,canvas.width,canvas.height); 
                   createParticles(canvas.width/2, canvas.height/2, "#FF0000");
                   if(hp <= 0) handleGameOver();
               } else {
-                  createParticles(canvas.width/2, canvas.height*0.7, "#f1c40f"); // 벽에 맞음
+                  createParticles(canvas.width/2, canvas.height*0.7, "#f1c40f"); 
               }
               enemyBullets.splice(i, 1);
           }
@@ -286,18 +287,11 @@ game_html = """
       for (let t of targets) {
           drawMinecraftEnemy(t);
           
-          // ★ 리얼한 공격 경고 (빨간 레이저 사이트)
           if(t.attackTimer > 0 && t.attackTimer < 60) {
-              ctx.save();
-              ctx.strokeStyle = `rgba(255, 0, 0, ${1 - t.attackTimer/60})`;
-              ctx.lineWidth = 2 + (60 - t.attackTimer)*0.05;
+              ctx.save(); ctx.strokeStyle = `rgba(255, 0, 0, ${1 - t.attackTimer/60})`; ctx.lineWidth = 2 + (60 - t.attackTimer)*0.05;
               ctx.beginPath(); ctx.moveTo(t.x + t.size/2, t.y + t.size/2);
-              
-              // 숨어있으면 화면 가운데로, 조준중이면 조준경 쪽으로 레이저가 꽂힘!
-              let targetX = isHiding ? canvas.width/2 : mouseX;
-              let targetY = isHiding ? canvas.height/2 : mouseY;
+              let targetX = isHiding ? canvas.width/2 : mouseX; let targetY = isHiding ? canvas.height/2 : mouseY;
               ctx.lineTo(targetX, targetY); ctx.stroke();
-              
               ctx.fillStyle = "rgba(255, 0, 0, 0.9)"; ctx.font = "22px Arial"; ctx.textAlign = "center";
               ctx.fillText("⚠️ 적 조준 중!! 숨으세요!", canvas.width/2, 80);
               ctx.restore();
@@ -309,15 +303,14 @@ game_html = """
       if(!isHiding) drawScope(); 
       
       for (let b of enemyBullets) {
-          let currX = b.startX + (canvas.width/2 - b.startX) * b.progress;
-          let currY = b.startY + (canvas.height/2 - b.startY) * b.progress;
+          let currX = b.startX + (canvas.width/2 - b.startX) * b.progress; let currY = b.startY + (canvas.height/2 - b.startY) * b.progress;
           let currRadius = 5 + b.progress * 60; 
           ctx.fillStyle = "rgba(255, 69, 0, 0.9)"; ctx.beginPath(); ctx.arc(currX, currY, currRadius, 0, Math.PI*2); ctx.fill();
       }
 
       drawCoverWall(); 
       
-      // ★ 숨어있을 때만 아리따운 금발 스나이퍼 등장!
+      // ★ 숨어있을 때만 부장님의 커스텀 요원 이미지가 짠! 하고 나타납니다.
       if(isHiding) drawFemaleSniper();
 
       requestAnimationFrame(gameLoop);
@@ -357,7 +350,7 @@ game_html = """
       let initials = document.getElementById("initials").value.toUpperCase() || "UNK";
       highScores.push({name: initials.substring(0,3), score: score});
       highScores.sort((a,b) => b.score - a.score); highScores = highScores.slice(0,5); 
-      localStorage.setItem('7c_sniper_v2_ranking', JSON.stringify(highScores));
+      localStorage.setItem('7c_sniper_v3_ranking', JSON.stringify(highScores));
       currentHighScore = highScores[0].score; document.getElementById("new-record-input").style.display = "none"; showLeaderboard();
   }
 
@@ -377,6 +370,6 @@ game_html = """
 </script>
 </body>
 </html>
-"""
+""".replace("SNIPER_IMG_SRC", img_base64)
 
 components.html(game_html, height=600)
